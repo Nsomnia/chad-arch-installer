@@ -1,0 +1,41 @@
+# GLM5 Chad Arch Installer Gitignore
+
+# Log files
+logs/
+*.log
+
+# Mock/test directories
+/tmp/
+mock-root/
+
+# Backup files
+backup/
+*.bak
+*.backup
+
+# Editor files
+*.swp
+*.swo
+*~
+.*.swp
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Generated config
+config/local.yaml
+config/user.yaml
+
+# Cache
+*.cache
+cache/
