@@ -1,0 +1,60 @@
+# GLM5 Chad Arch Installer - Desktop Profile
+# Optimized for desktop/workstation use with modern hardware
+#
+
+system:
+  hostname: arch-desktop
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 1024
+  wipe_method: quick
+  luks:
+    enabled: true
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 8192
+
+boot:
+  kernel: linux-cachyos-bore
+  kernel_fallback: linux-lts
+  loader: limine
+  secure_boot: false
+
+kernels:
+  additional:
+    - linux-lts
+  compression: zstd
+
+snapper:
+  enabled: true
+  hourly: 10
+  daily: 7
+
+repos:
+  cachyos: true
+  chaotic: true
+
+hardware:
+  gpu_driver: auto
+  amd_legacy: false
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: true
+    linker: mold
+  io_scheduler:
+    ssd: bfq
+    nvme: none
+
+desktop:
+  enabled: true
+  environment: hyprland
+  display_manager: auto
+
+aur:
+  enabled: true
+  helper: paru

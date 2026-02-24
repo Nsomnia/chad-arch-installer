@@ -1,0 +1,60 @@
+# GLM5 Chad Arch Installer - Legacy Hardware Profile
+# Optimized for older hardware (2010-2015 era)
+#
+
+system:
+  hostname: arch-legacy
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 512
+  wipe_method: quick
+  luks:
+    enabled: false
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 4096
+
+boot:
+  kernel: linux-lts
+  kernel_fallback: linux-lts
+  loader: grub  # Required for some legacy systems
+  secure_boot: false
+
+kernels:
+  additional: []
+  compression: gzip  # Faster decompression on older CPUs
+
+snapper:
+  enabled: true
+  hourly: 5
+  daily: 3
+  weekly: 2
+
+repos:
+  cachyos: false
+  chaotic: false
+
+hardware:
+  gpu_driver: auto
+  amd_legacy: true
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: false  # Disable for older CPUs
+    linker: gold
+  io_scheduler:
+    ssd: bfq
+    hdd: bfq
+
+desktop:
+  enabled: true
+  environment: xfce
+  display_manager: lightdm
+
+aur:
+  enabled: true
+  helper: paru

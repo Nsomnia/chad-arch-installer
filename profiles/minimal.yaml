@@ -1,0 +1,52 @@
+# GLM5 Chad Arch Installer - Minimal Profile
+# Bare minimum installation, good base for customization
+#
+
+system:
+  hostname: arch-minimal
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 512
+  wipe_method: quick
+  luks:
+    enabled: false
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 2048
+
+boot:
+  kernel: linux
+  kernel_fallback: linux-lts
+  loader: systemd-boot
+  secure_boot: false
+
+kernels:
+  additional:
+    - linux-lts
+  compression: zstd
+
+snapper:
+  enabled: true
+  hourly: 5
+  daily: 3
+
+repos:
+  cachyos: false
+  chaotic: false
+
+hardware:
+  gpu_driver: auto
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: true
+
+desktop:
+  enabled: false
+
+aur:
+  enabled: false

@@ -1,0 +1,60 @@
+# GLM5 Chad Arch Installer - Chromebook Profile
+# Optimized for Chromebooks with special hardware requirements
+#
+
+system:
+  hostname: arch-chromebook
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 512
+  wipe_method: quick
+  luks:
+    enabled: false
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 4096
+  use_zram: true
+
+boot:
+  kernel: linux-lts
+  kernel_fallback: linux-lts
+  loader: grub  # REQUIRED for Chromebook keyboard support
+  secure_boot: false
+
+kernels:
+  additional: []
+  compression: zstd
+
+snapper:
+  enabled: true
+  hourly: 5
+  daily: 3
+
+repos:
+  cachyos: false
+  chaotic: false
+
+hardware:
+  gpu_driver: auto
+  chromebook: true  # Auto-detected
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: true
+  sysctl:
+    swappiness: 10
+  io_scheduler:
+    ssd: bfq
+
+desktop:
+  enabled: true
+  environment: gnome  # Good touchpad support
+  display_manager: gdm
+
+aur:
+  enabled: true
+  helper: paru

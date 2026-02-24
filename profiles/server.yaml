@@ -1,0 +1,62 @@
+# GLM5 Chad Arch Installer - Server Profile
+# Optimized for server/headless use
+#
+
+system:
+  hostname: arch-server
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 512
+  wipe_method: quick
+  luks:
+    enabled: true
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 2048
+  use_zram: true
+
+boot:
+  kernel: linux-lts
+  loader: systemd-boot
+  secure_boot: false
+
+kernels:
+  additional: []
+  compression: zstd
+
+snapper:
+  enabled: true
+  hourly: 5
+  daily: 7
+  weekly: 4
+
+repos:
+  cachyos: false
+  chaotic: false
+
+hardware:
+  gpu_driver: auto
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: true
+  sysctl:
+    swappiness: 10
+  io_scheduler:
+    ssd: bfq
+    hdd: bfq
+    nvme: none
+
+desktop:
+  enabled: false
+
+network:
+  enable_ssh: true
+  firewall: true
+
+aur:
+  enabled: false

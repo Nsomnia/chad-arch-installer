@@ -1,0 +1,63 @@
+# GLM5 Chad Arch Installer - Gaming Profile
+# Optimized for gaming with low-latency kernel
+#
+
+system:
+  hostname: arch-gaming
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+
+storage:
+  efi_size_mb: 1024
+  wipe_method: quick
+  luks:
+    enabled: false
+  btrfs:
+    compress: zstd:3
+  swap_size_mb: 16384
+
+boot:
+  kernel: linux-cachyos-bore
+  kernel_fallback: linux-zen
+  loader: limine
+  secure_boot: false
+  kernel_parameters: "mitigations=off nowatchdog"
+
+kernels:
+  additional:
+    - linux-zen
+  compression: zstd
+
+snapper:
+  enabled: true
+  hourly: 5
+  daily: 3
+
+repos:
+  cachyos: true
+  chaotic: true
+
+hardware:
+  gpu_driver: auto
+  nvidia_prime: false
+
+optimize:
+  makepkg:
+    parallel: auto
+    lto: true
+    linker: mold
+  sysctl:
+    swappiness: 5
+  io_scheduler:
+    ssd: bfq
+    nvme: none
+
+desktop:
+  enabled: true
+  environment: kde
+  display_manager: sddm
+
+aur:
+  enabled: true
+  helper: paru
