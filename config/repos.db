@@ -1,0 +1,12 @@
+cachyos|https://mirror.cachyos.org/repo/$arch/$repo|F3B607488DB35A47|CachyOS optimized packages|true
+cachyos-v3|https://mirror.cachyos.org/repo/$arch/$repo|F3B607488DB35A47|CachyOS x86-64-v3 optimized|true
+cachyos-v4|https://mirror.cachyos.org/repo/$arch/$repo|F3B607488DB35A47|CachyOS x86-64-v4 optimized|true
+chaotic-aur|https://geo-mirror.chaotic.cx/$repo/$arch|FBA220DFC880C036|Chaotic-AUR automated builds|true
+archlinuxcn|https://repo.archlinuxcn.org/$arch|archlinuxcn-keyring|Arch Linux CN community|true
+archzfs|https://github.com/archzfs/archzfs/releases/download/experimental|3A9917BF0DED5C13F69AC68FABEC0A1208037BE9|ZFS packages|true
+liquorix|https://liquorix.net/archlinux/$repo/$arch|9AE4078033F8024D|Liquorix kernel|true
+arch4edu|https://mirrors.tuna.tsinghua.edu.cn/arch4edu/$arch|7931B6D628C8D3BA|Educational software|true
+ALHP|https://alhp.dev/$repo/$arch|alhp-keyring|Optimized official packages|true
+g14|https://arch.asus-linux.org|8F654886F17D497FEFE3DB448B15A6B0E9A3FA35|ASUS Linux packages|true
+proaudio|https://arch.osamc.de/$repo/$arch|762AE5DB2B38786364BD81C4B9141BCC62D38EE5|Professional audio|true
+bioarchlinux|https://repo.bioarchlinux.org/$arch|B1F96021DB62254D|Bioinformatics packages|true

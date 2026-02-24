@@ -1,0 +1,102 @@
+# GLM5 Chad Arch Installer - Default Configuration
+# 
+# This file contains sensible defaults for the installer.
+# Override by creating your own config or using the wizard.
+#
+
+# System Configuration
+system:
+  hostname: arch-chad
+  timezone: UTC
+  locale: en_US.UTF-8
+  keymap: us
+  cpu_vendor: auto  # auto, intel, or amd
+
+# Storage Configuration
+storage:
+  # EFI partition size in MB
+  efi_size_mb: 1024
+  
+  # Disk wipe method: quick, secure, discard, skip
+  wipe_method: quick
+  
+  # LUKS encryption
+  luks:
+    enabled: false
+    cipher: aes-xts-plain64
+    key_size: 512
+    hash: sha512
+    pbkdf: argon2id
+  
+  # BTRFS settings
+  btrfs:
+    label: ARCH
+    compress: zstd:3  # zstd:1-19, lzo, lz4, none
+    mount_options: noatime,commit=120
+  
+  # Swap
+  swap_size_mb: 4096
+
+# Boot Configuration
+boot:
+  kernel: linux  # linux, linux-lts, linux-hardened, linux-zen, linux-cachyos
+  kernel_fallback: linux-lts
+  loader: systemd-boot  # systemd-boot, grub, refind
+  secure_boot: false
+
+# Snapper Configuration
+snapper:
+  enabled: true
+  hourly: 10
+  daily: 7
+  weekly: 4
+  monthly: 6
+  yearly: 2
+  pacman_hooks: true
+
+# Unofficial Repositories
+repos:
+  cachyos: false
+  cachyos_v3: false
+  cachyos_v4: false
+  chaotic: false
+  archlinuxcn: false
+  archzfs: false
+
+# Optimization Settings
+optimize:
+  makepkg:
+    parallel: auto  # auto or number
+    compiler_flags: auto
+    lto: true
+    linker: auto  # auto, mold, lld, gold, bfd
+  
+  sysctl:
+    swappiness: 10
+    vfs_cache_pressure: 50
+
+# Desktop Environment
+desktop:
+  enabled: false
+  environment: hyprland  # hyprland, kde, gnome, sway, xfce, i3
+  
+# Backup Settings
+backup:
+  paths:
+    - /etc
+    - /root
+    - /home
+    - /var/lib/pacman
+    - /usr/local/bin
+  include_gpg_keys: true
+  include_ssh_keys: true
+  compression: zstd
+
+# User Configuration (will be prompted if not set)
+user:
+  name: ""
+  shell: /bin/bash
+  groups:
+    - wheel
+    - video
+    - audio
