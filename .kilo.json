@@ -1,0 +1,75 @@
+{
+  "project": {
+    "name": "glm5-chad-arch-installer",
+    "version": "2.0.0-chad",
+    "description": "Modular Arch Linux installer with BTRFS and Snapper",
+    "language": "bash",
+    "type": "installer"
+  },
+  "conventions": {
+    "naming": {
+      "public_functions": "module_action_verb",
+      "private_functions": "_module_helper",
+      "global_variables": "UPPERCASE_WITH_PREFIX",
+      "local_variables": "lowercase"
+    },
+    "prefixes": {
+      "global_state": "CHAD_",
+      "mock_mode": "MOCK_",
+      "logging": "LOG_",
+      "config": "CONFIG_",
+      "tui": "TUI_",
+      "internal": "_"
+    },
+    "error_codes": {
+      "0": "Success",
+      "1": "General failure",
+      "2": "Missing dependency",
+      "3": "Permission denied",
+      "4": "Validation error",
+      "5": "User cancelled",
+      "130": "Interrupted (Ctrl+C)"
+    }
+  },
+  "modules": {
+    "load_order": [
+      ["logging", "tui", "mock", "deps", "config"],
+      ["btrfs", "snapper", "makepkg"],
+      ["repos", "install", "backup", "optimize", "hardware"]
+    ],
+    "core": ["logging", "tui", "mock", "deps", "config"],
+    "libs": ["btrfs", "snapper", "makepkg"],
+    "features": ["repos", "install", "backup", "optimize", "hardware"]
+  },
+  "testing": {
+    "command": "./installer.sh test",
+    "mock_mode": "MOCK_MODE=true ./installer.sh",
+    "check_deps": "./installer.sh check-deps"
+  },
+  "linting": {
+    "shellcheck": {
+      "enabled": true,
+      "exclude": ["SC1090", "SC1091"]
+    },
+    "shfmt": {
+      "enabled": true,
+      "indent": 4,
+      "binary_next_line": true
+    }
+  },
+  "commands": {
+    "install": "./installer.sh install",
+    "mock_install": "./installer.sh -m install",
+    "config_wizard": "./installer.sh config wizard",
+    "repos_update": "./installer.sh repos update",
+    "repos_select": "./installer.sh repos select",
+    "backup": "./installer.sh backup full",
+    "optimize": "./installer.sh optimize all",
+    "hardware_detect": "./installer.sh hardware detect"
+  },
+  "documentation": {
+    "main": "AGENTS.md",
+    "todo": "TODO.md",
+    "readme": "README.md"
+  }
+}
