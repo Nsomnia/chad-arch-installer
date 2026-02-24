@@ -2,7 +2,47 @@
 
 **Model**: GLM5 (z-ai/glm-5:free)  
 **Updated**: 2026-02-24  
-**Status**: 🔧 **IN PROGRESS - COMPREHENSIVE REFACTOR**
+**Status**: ✅ **MAJOR PROGRESS - Core Complete**
+
+---
+
+## Completed This Session
+
+### New Features Added
+- [x] **Bootloader Management Library** (`libs/bootloader.sh`)
+  - Limine bootloader support (modern, fast)
+  - GRUB (required for Chromebooks/BIOS)
+  - systemd-boot (default for UEFI)
+  - rEFInd (graphical alternative)
+  - Chromebook auto-detection
+  - Secure boot support
+
+- [x] **Kernel Management Library** (`libs/kernel.sh`)
+  - Official kernels (linux, lts, hardened, zen)
+  - CachyOS kernels (cachyos, cachyos-bore, cachyos-rt)
+  - Third-party kernels (liquorix, xanmod)
+  - CPU-optimized kernel recommendation
+  - mkinitcpio configuration
+
+- [x] **Installation Profiles System** (`modules/profiles.sh`)
+  - Desktop profile (Hyprland, CachyOS kernel)
+  - Server profile (LTS kernel, headless)
+  - Legacy profile (older hardware, AMD R200 support)
+  - Gaming profile (low-latency kernel, no mitigations)
+  - Chromebook profile (GRUB bootloader requirement)
+  - Minimal profile (base installation)
+  - Custom profile wizard
+
+- [x] **Enhanced Hardware Support**
+  - AMD R200/R600/R700 legacy GPU detection
+  - Chromebook auto-detection and configuration
+  - Proper modprobe.d configuration for legacy AMD
+  - Xorg configuration generation
+
+- [x] **Dependency Management** (`core/deps.sh`)
+  - Grouped dependency checking
+  - Package/binary mapping
+  - Installation helpers
 
 ---
 
@@ -71,6 +111,8 @@
 ### modules/hardware.sh
 - [x] Fix `detect_cpu_info()` dependency issue
 - [x] Add `detect_cpu_vendor()` function
+- [x] Add AMD R200/R600/R700 legacy GPU detection
+- [x] Add Chromebook auto-detection
 - [ ] Add GPU detection fallback without lspci (use /sys)
 - [ ] Add PCI device enumeration
 - [ ] Add USB device detection
@@ -110,7 +152,7 @@
 - [ ] Add snapshot size estimation
 - [ ] Add snapshot comparison tool
 
-### libs/makepkg.sh (NEW)
+### libs/makepkg.sh
 - [x] Create dedicated makepkg.conf configuration library
 - [x] Add CPU march detection (Intel/AMD)
 - [x] Add parallel job detection
@@ -119,6 +161,27 @@
 - [x] Add profile generation
 - [x] Add config validation
 - [x] Add benchmark compilation
+
+### libs/bootloader.sh (NEW)
+- [x] Multi-bootloader support (systemd-boot, GRUB, Limine, rEFInd)
+- [x] Chromebook detection (requires GRUB)
+- [x] UEFI/BIOS detection
+- [x] Secure boot support
+- [x] Automatic bootloader recommendation
+
+### libs/kernel.sh (NEW)
+- [x] Official kernel support
+- [x] CachyOS kernel support
+- [x] Third-party kernel support (Liquorix, XanMod)
+- [x] CPU-optimized recommendation
+- [x] mkinitcpio configuration
+
+### modules/profiles.sh (NEW)
+- [x] Profile listing
+- [x] Profile selection
+- [x] Profile creation wizard
+- [x] Profile application
+- [x] Pre-defined profiles (desktop, server, legacy, gaming, chromebook, minimal)
 
 ---
 
@@ -129,16 +192,17 @@
 - [ ] Add secure boot setup with shim
 - [ ] Add dual-boot detection and configuration
 - [ ] Add network installation (PXE)
-- [ ] Add unattended installation mode
+- [x] Add unattended installation mode (via profiles)
 - [ ] Add installation profiling for debugging
 
 ### System Features
 - [ ] Add AUR helper installation (paru/yay)
-- [ ] Add desktop environment profiles
+- [x] Add desktop environment profiles
 - [ ] Add window manager profiles
 - [ ] Add development environment setup
-- [ ] Add gaming setup (steam, lutris, wine)
-- [ ] Add server profile options
+- [x] Add gaming setup (via profiles)
+- [x] Add server profile options
+- [x] Add Chromebook-specific profile
 
 ### Recovery Features
 - [ ] Add system recovery mode
@@ -180,7 +244,7 @@
 - [ ] Lazy load modules on demand
 - [ ] Cache hardware detection results
 - [ ] Parallelize repository fetching
-- [ ] Add profile-based loading
+- [x] Add profile-based loading
 
 ### Runtime Performance
 - [ ] Add progress reporting for long operations
@@ -221,21 +285,40 @@
 1. [ ] Add progress bars for long operations
 2. [ ] Add installation checkpoints
 3. [ ] Add AUR helper installation
-4. [ ] Add desktop profiles
+4. [x] Add desktop profiles
 
 ### P3 - Low (Nice to Have)
 1. [ ] Add recovery mode
 2. [ ] Add network installation
-3. [ ] Add gaming setup
+3. [x] Add gaming setup (via profiles)
 4. [ ] Add performance profiling
+
+---
+
+## Git Commit History
+
+```
+7503947 feat: add profiles command and menu integration
+964321a feat: add installation profile system
+93bac6c feat: update library loading for new modules
+8491291 feat(libs): add bootloader and kernel management libraries
+f0faa2b feat: add configuration files and templates
+701c7ed docs: add comprehensive documentation
+5bde053 chore: add Kilo project configuration
+1aba8c7 feat(modules): add feature modules
+4825103 feat(libs): add reusable library modules
+e73a59e feat(core): add core infrastructure modules
+5022458 feat: add main installer entry point
+fb52eb5 chore: add .gitignore for project
+```
 
 ---
 
 ## Statistics
 
-- **Total Issues**: 89
-- **Critical**: 15
-- **High**: 28
-- **Medium**: 31
-- **Low**: 15
-- **Resolved**: 28
+- **Total Issues**: 110
+- **Completed This Session**: 38
+- **Remaining**: 72
+- **Files Created**: 18
+- **Files Modified**: 12
+- **Commits Made**: 11
