@@ -274,26 +274,121 @@ options nvidia-drm modeset=1
 
 hardware_configure_amd_legacy() {
     local mount_point="${1:-}"
+    local gpu_model="${2:-}"
     
     _log_section "Configuring AMD Legacy GPU"
     
-    local modprobe_file="/etc/modprobe.d/amdgpu.conf"
-    [[ -n "$mount_point" ]] && modprobe_file="$mount_point$modprobe_file"
+    local modprobe_dir="/etc/modprobe.d"
+    [[ -n "$mount_point" ]] && modprobe_dir="$mount_point$modprobe_dir"
+    mkdir -p "$modprobe_dir"
     
-    local amd_conf="# AMD GPU options for legacy hardware
+    local amd_conf="# AMD GPU configuration for legacy hardware
+# Southern Islands (SI) and Sea Islands (CIK) support
 options amdgpu si_support=1
 options amdgpu cik_support=1
 options radeon si_support=0
 options radeon cik_support=0
 "
+
+    if [[ "$gpu_model" =~ R200|RV7|RV8|RV9|HD[234][0-9]{3} ]]; then
+        log_info "Detected AMD R200/R600/R700 series GPU"
+        amd_conf+="
+# R200/R600/R700 series specific options
+options radeon dpm=1
+options radeon aspm=1
+"
+    fi
     
-    mock_write_file "$modprobe_file" "$amd_conf"
+    mock_write_file "$modprobe_dir/amdgpu.conf" "$amd_conf"
     
     local env_file="/etc/environment"
     [[ -n "$mount_point" ]] && env_file="$mount_point$env_file"
     
-    log_info "Adding MESA_LOADER_DRIVER_OVERRIDE for legacy GPU"
-    mock_append_file "$env_file" "MESA_LOADER_DRIVER_OVERRIDE=radeonsi"
+    if [[ "$gpu_model" =~ R200|RV7|RV8 ]]; then
+        log_info "Adding environment variables for R200 series"
+        mock_append_file "$env_file" "MESA_LOADER_DRIVER_OVERRIDE=radeonsi"
+        mock_append_file "$env_file" "R600_DEBUG=nosb"
+    fi
+    
+    local xorg_dir="/etc/X11/xorg.conf.d"
+    [[ -n "$mount_point" ]] && xorg_dir="$mount_point$xorg_dir"
+    mkdir -p "$xorg_dir"
+    
+    local xorg_conf="Section \"Device\"
+    Identifier \"AMD Graphics\"
+    Driver \"modesetting\"
+    Option \"AccelMethod\" \"glamor\"
+    Option \"DRI\" \"3\"
+EndSection
+"
+    mock_write_file "$xorg_dir/20-amd-graphics.conf" "$xorg_conf"
+    
+    log_info "AMD legacy GPU configuration applied"
+}
+
+hardware_detect_amd_legacy() {
+    local gpu_info
+    gpu_info=$(hardware_detect_gpu 2>/dev/null) || return 1
+    
+    while IFS= read -r line; do
+        if [[ "$line" =~ vendor=amd|vendor=ati ]]; then
+            if [[ "$line" =~ R200|RV[789]|HD[234][0-9]{3}|Radeon.*HD|Pitcairn|Tahiti|Verde|Oland ]]; then
+                return 0
+            fi
+        fi
+    done <<< "$gpu_info"
+    
+    return 1
+}
+
+hardware_is_chromebook() {
+    if [[ -d /sys/firmware/efi ]]; then
+        local product
+        product=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
+        if echo "$product" | grep -qiE "chromebook|chromebox|chromebox|chromebit|chromebase"; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+hardware_configure_chromebook() {
+    local mount_point="${1:-}"
+    
+    _log_section "Configuring Chromebook"
+    
+    log_info "Chromebook detected - applying specific configurations"
+    
+    local modprobe_dir="/etc/modprobe.d"
+    [[ -n "$mount_point" ]] && modprobe_dir="$mount_point$modprobe_dir"
+    mkdir -p "$modprobe_dir"
+    
+    local chromebook_conf="# Chromebook specific options
+# Fix keyboard issues on some Chromebooks
+options i8042 nokbd reset
+options i8042 debug=0
+
+# Power management
+options tpm_tis force=1
+options tpm_crb force=1
+
+# Sound
+options snd_hda_intel index=0 model=auto
+"
+    mock_write_file "$modprobe_dir/chromebook.conf" "$chromebook_conf"
+    
+    local modules_load_dir="/etc/modules-load.d"
+    [[ -n "$mount_point" ]] && modules_load_dir="$mount_point$modules_load_dir"
+    mkdir -p "$modules_load_dir"
+    
+    local modules_conf="# Chromebook required modules
+chromeos_laptop
+chromeos_pstore
+"
+    mock_write_file "$modules_load_dir/chromebook.conf" "$modules_conf"
+    
+    log_warn "Chromebook requires GRUB bootloader for keyboard support"
+    log_info "Chromebook configuration applied"
 }
 
 hardware_configure_touchscreen() {
@@ -407,23 +502,30 @@ hardware_install_drivers() {
     
     _log_section "Installing Hardware Drivers"
     
+    if hardware_is_chromebook; then
+        hardware_configure_chromebook "$mount_point"
+    fi
+    
     local gpu_info
     gpu_info=$(hardware_detect_gpu) || true
     
     local vendors=()
     local drivers=()
+    local gpu_models=()
     
     while IFS= read -r line; do
         if [[ -n "$line" ]]; then
-            local vendor driver
+            local vendor driver device
             for part in $line; do
                 case "$part" in
                     vendor=*) vendor="${part#vendor=}" ;;
                     driver=*) driver="${part#driver=}" ;;
+                    device=*) device="${part#device=}" ;;
                 esac
             done
             [[ -n "$vendor" ]] && vendors+=("$vendor")
             [[ -n "$driver" ]] && drivers+=("$driver")
+            [[ -n "$device" ]] && gpu_models+=("$device")
         fi
     done <<< "$gpu_info"
     
@@ -436,8 +538,9 @@ hardware_install_drivers() {
         case "$vendor" in
             nvidia) hardware_configure_nvidia "$mount_point" ;;
             amd)
-                if hardware_detect_legacy; then
-                    hardware_configure_amd_legacy "$mount_point"
+                if hardware_detect_amd_legacy; then
+                    local gpu_model="${gpu_models[*]}"
+                    hardware_configure_amd_legacy "$mount_point" "$gpu_model"
                 fi
                 ;;
         esac
@@ -466,6 +569,8 @@ hardware_interactive() {
     local options=(
         "Detect All Hardware"
         "Detect GPU"
+        "Detect AMD Legacy GPU"
+        "Detect Chromebook"
         "Detect Touchscreen"
         "Detect WiFi"
         "Detect Bluetooth"
@@ -482,6 +587,8 @@ hardware_interactive() {
         case "$choice" in
             "Detect All Hardware") hardware_detect_all ;;
             "Detect GPU") hardware_detect_gpu ;;
+            "Detect AMD Legacy GPU") hardware_detect_amd_legacy && log_info "AMD legacy GPU detected" || log_info "No AMD legacy GPU detected" ;;
+            "Detect Chromebook") hardware_is_chromebook && log_info "Chromebook detected" || log_info "Not a Chromebook" ;;
             "Detect Touchscreen") hardware_detect_touchscreen ;;
             "Detect WiFi") hardware_detect_wifi ;;
             "Detect Bluetooth") hardware_detect_bluetooth ;;

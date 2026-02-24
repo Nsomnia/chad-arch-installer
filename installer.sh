@@ -269,7 +269,7 @@ load_all_libs() {
         load_lib "$lib" || return 1
     done
     
-    for lib in btrfs snapper makepkg; do
+    for lib in btrfs snapper makepkg bootloader kernel; do
         load_lib "$lib" || return 1
     done
     

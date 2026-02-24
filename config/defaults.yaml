@@ -33,16 +33,54 @@ storage:
     label: ARCH
     compress: zstd:3  # zstd:1-19, lzo, lz4, none
     mount_options: noatime,commit=120
+    subvolumes:
+      - "@:/"
+      - "@home:/home"
+      - "@root:/root"
+      - "@var:/var"
+      - "@var_log:/var/log"
+      - "@var_cache:/var/cache"
+      - "@snapshots:/.snapshots"
+      - "@home_snapshots:/home/.snapshots"
+    nocow_subvolumes:
+      - "@var"
+      - "@var_cache"
   
   # Swap
   swap_size_mb: 4096
+  use_zram: false
 
 # Boot Configuration
 boot:
-  kernel: linux  # linux, linux-lts, linux-hardened, linux-zen, linux-cachyos
+  # Main kernel
+  kernel: auto  # auto, linux, linux-lts, linux-hardened, linux-zen, 
+                # linux-cachyos, linux-cachyos-bore, linux-lqx, linux-xanmod
+  
+  # Fallback kernel (optional)
   kernel_fallback: linux-lts
-  loader: systemd-boot  # systemd-boot, grub, refind
+  
+  # Bootloader
+  loader: auto  # auto, systemd-boot, grub, limine, refind
+                # Note: grub is required for Chromebooks and BIOS systems
+  
+  # Secure Boot (experimental)
   secure_boot: false
+  
+  # Kernel parameters
+  kernel_parameters: ""
+
+# Kernel Configuration
+kernels:
+  # Additional kernels to install
+  additional: []
+  # - linux-lts
+  # - linux-zen
+  
+  # Kernel compression
+  compression: zstd
+  
+  # Install microcode
+  microcode: auto  # auto, intel, amd, none
 
 # Snapper Configuration
 snapper:
@@ -56,12 +94,40 @@ snapper:
 
 # Unofficial Repositories
 repos:
+  # CachyOS optimized packages
   cachyos: false
-  cachyos_v3: false
-  cachyos_v4: false
+  cachyos_v3: false  # Requires AVX2 CPU
+  cachyos_v4: false  # Requires AVX512 CPU
+  
+  # Chaotic-AUR
   chaotic: false
+  
+  # Arch Linux CN
   archlinuxcn: false
+  
+  # ZFS
   archzfs: false
+  
+  # ALHP (optimized official packages)
+  alhp: false
+  alhp_v3: false
+  alhp_v4: false
+
+# Hardware Configuration
+hardware:
+  # GPU driver: auto, nvidia, amd, intel, nouveau
+  gpu_driver: auto
+  
+  # AMD specific
+  amd_legacy: false  # Enable for R200/R600/R700 series
+  amd_dpm: true
+  
+  # NVIDIA specific  
+  nvidia_dkms: false  # Use DKMS driver instead of proprietary
+  nvidia_prime: false  # For hybrid graphics
+  
+  # Chromebook
+  chromebook: false  # Auto-detected, enables GRUB requirement
 
 # Optimization Settings
 optimize:
@@ -74,12 +140,32 @@ optimize:
   sysctl:
     swappiness: 10
     vfs_cache_pressure: 50
+    dirty_ratio: 20
+    dirty_background_ratio: 5
+  
+  io_scheduler:
+    ssd: bfq
+    hdd: bfq
+    nvme: none
+
+# Network Configuration
+network:
+  hostname: arch-chad
+  enable_ssh: true
+  ssh_port: 22
+  firewall: false
 
 # Desktop Environment
 desktop:
   enabled: false
-  environment: hyprland  # hyprland, kde, gnome, sway, xfce, i3
+  environment: hyprland  # hyprland, kde, gnome, sway, xfce, i3, cinnamon, budgie
+  display_manager: auto  # auto, sddm, gdm, lightdm, lxdm
   
+# AUR Helper
+aur:
+  enabled: false
+  helper: paru  # paru, yay, pakku, aurman
+
 # Backup Settings
 backup:
   paths:
@@ -100,3 +186,12 @@ user:
     - wheel
     - video
     - audio
+    - storage
+    - network
+
+# Post-Install Hooks
+post_install:
+  # Commands to run after installation
+  commands: []
+  # - "systemctl enable docker"
+  # - "usermod -aG docker username"
