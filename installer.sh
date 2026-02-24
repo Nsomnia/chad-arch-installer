@@ -273,7 +273,7 @@ load_all_libs() {
         load_lib "$lib" || return 1
     done
     
-    for lib in repos install backup optimize hardware; do
+    for lib in repos install backup optimize hardware profiles; do
         load_lib "$lib" || return 1
     done
 }
@@ -286,6 +286,7 @@ Usage: $(basename "$0") [OPTIONS] [COMMAND]
 
 Commands:
     install          Run the full Arch Linux installer
+    profiles         Manage installation profiles
     config           Configure the installer settings
     repos            Manage unofficial repositories
     backup           Backup system files and packages
@@ -311,6 +312,8 @@ Examples:
     $(basename "$0") test               # Run automated tests
     $(basename "$0") install            # Full installation
     $(basename "$0") -m install         # Mock/test installation
+    $(basename "$0") profiles list      # List available profiles
+    $(basename "$0") profiles apply gaming # Apply gaming profile
     $(basename "$0") repos update       # Fetch repos from ArchWiki
     $(basename "$0") repos list         # List available repos
     $(basename "$0") repos select       # Multi-select repos to enable
@@ -326,6 +329,14 @@ TUI Backends (in order of preference):
     1. gum    - Best experience, install with: pacman -S gum
     2. dialog - Good fallback, usually pre-installed
     3. bash   - Works everywhere, limited features
+
+Profiles:
+    desktop    - Modern desktop with Hyprland, CachyOS kernel
+    server     - Headless server with LTS kernel
+    legacy     - Older hardware with AMD legacy support
+    gaming     - Gaming optimized with low-latency kernel
+    chromebook - Chromebook specific with GRUB bootloader
+    minimal    - Bare minimum installation
 
 For more information, see the README or visit:
 https://github.com/nsomnia/chad-arch-installer
@@ -404,6 +415,7 @@ main_menu() {
         
         local options=(
             "🚀 Install Arch Linux"
+            "📄 Select Installation Profile"
             "⚙️  Configuration Wizard"
             "📦 Repository Manager"
             "💾 Backup System"
@@ -425,6 +437,9 @@ main_menu() {
                 _tui_confirm "This will install Arch Linux. Continue?" && {
                     install_run
                 }
+                ;;
+            *"Profile"*)
+                profile_select
                 ;;
             *"Configuration"*)
                 config_wizard
@@ -569,6 +584,17 @@ run_command() {
                 drivers) hardware_install_drivers ;;
                 interactive) hardware_interactive ;;
                 *) hardware_interactive ;;
+            esac
+            ;;
+        profiles)
+            case "${1:-menu}" in
+                list) profile_list ;;
+                show) profile_show "${2:-desktop}" ;;
+                apply) profile_apply "${2:-desktop}" ;;
+                create) profile_wizard ;;
+                select) profile_select ;;
+                menu) profile_menu ;;
+                *) profile_menu ;;
             esac
             ;;
         mock)
