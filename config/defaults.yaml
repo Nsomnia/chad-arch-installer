@@ -8,7 +8,7 @@
 system:
   hostname: arch-chad
   timezone: UTC
-  locale: en_US.UTF-8
+  locale: en_CA.UTF-8
   keymap: us
   cpu_vendor: auto  # auto, intel, or amd
 
@@ -30,8 +30,8 @@ storage:
   
   # BTRFS settings
   btrfs:
-    label: ARCH
-    compress: zstd:3  # zstd:1-19, lzo, lz4, none
+    label: ARCH_BTRFS
+    compress: zstd:13  # zstd:1-19, lzo, lz4, none
     mount_options: noatime,commit=120
     subvolumes:
       - "@:/"
@@ -40,6 +40,7 @@ storage:
       - "@var:/var"
       - "@var_log:/var/log"
       - "@var_cache:/var/cache"
+      - "@var_lib_pacman:/var/lib/pacman"
       - "@snapshots:/.snapshots"
       - "@home_snapshots:/home/.snapshots"
     nocow_subvolumes:
@@ -48,7 +49,7 @@ storage:
   
   # Swap
   swap_size_mb: 4096
-  use_zram: false
+  use_zram: true
 
 # Boot Configuration
 boot:
@@ -61,7 +62,7 @@ boot:
   
   # Bootloader
   loader: auto  # auto, systemd-boot, grub, limine, refind
-                # Note: grub is required for Chromebooks and BIOS systems
+                # Note: grub is required for Chromebooks (helps anyways due to no F-keys outside of systemd) and BIOS systems
   
   # Secure Boot (experimental)
   secure_boot: false
@@ -86,31 +87,31 @@ kernels:
 snapper:
   enabled: true
   hourly: 10
-  daily: 7
-  weekly: 4
-  monthly: 6
-  yearly: 2
+  daily: 5
+  weekly: 2
+  monthly: 2
+  yearly: 1
   pacman_hooks: true
 
 # Unofficial Repositories
 repos:
   # CachyOS optimized packages
-  cachyos: false
+  cachyos: true
   cachyos_v3: false  # Requires AVX2 CPU
   cachyos_v4: false  # Requires AVX512 CPU
   
   # Chaotic-AUR
-  chaotic: false
+  chaotic: true
   
   # Arch Linux CN
-  archlinuxcn: false
+  archlinuxcn: true
   
   # ZFS
-  archzfs: false
+  archzfs: true
   
   # ALHP (optimized official packages)
-  alhp: false
-  alhp_v3: false
+  alhp: true
+  alhp_v3: true
   alhp_v4: false
 
 # Hardware Configuration
@@ -119,7 +120,7 @@ hardware:
   gpu_driver: auto
   
   # AMD specific
-  amd_legacy: false  # Enable for R200/R600/R700 series
+  amd_legacy: true  # Enable for R200/R600/R700 series
   amd_dpm: true
   
   # NVIDIA specific  
@@ -150,20 +151,20 @@ optimize:
 
 # Network Configuration
 network:
-  hostname: arch-chad
+  hostname: arch-btw
   enable_ssh: true
   ssh_port: 22
   firewall: false
 
 # Desktop Environment
 desktop:
-  enabled: false
+  enabled: true
   environment: hyprland  # hyprland, kde, gnome, sway, xfce, i3, cinnamon, budgie
   display_manager: auto  # auto, sddm, gdm, lightdm, lxdm
   
 # AUR Helper
 aur:
-  enabled: false
+  enabled: true
   helper: paru  # paru, yay, pakku, aurman
 
 # Backup Settings
@@ -181,7 +182,7 @@ backup:
 # User Configuration (will be prompted if not set)
 user:
   name: ""
-  shell: /bin/bash
+  shell: /bin/fish
   groups:
     - wheel
     - video

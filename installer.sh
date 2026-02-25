@@ -7,7 +7,7 @@
 #
 # A modular, bulletproof Arch Linux installer with:
 # - BTRFS + Snapper for bulletproof snapshots
-# - TUI interface (gum/dialog/pure bash)
+# - TUI interface (gum)
 # - Highly configurable via YAML
 # - Mock mode for safe testing
 # - Support for unofficial repos (CachyOS, Chaotic-AUR, etc.)
@@ -33,7 +33,15 @@ colors() {
 }
 
 banner() {
-    echo -e "
+    if command -v gum &>/dev/null; then
+        gum style --align center --foreground 212 --bold "GLM5 CHAD ARCH INSTALLER"
+        gum style --align center --foreground 82 "v${VERSION}"
+        gum style --align center --foreground 240 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        gum style --align center --foreground 45 "Arch Linux BTRFS Installer with Snapshots"
+        gum style --align center --foreground 214 "\"I use Arch, btw\" - Now with 1337-tier repo selection"
+        echo
+    else
+        echo -e "
 \033[38;5;196m    ██████╗  █████╗ ██╗     ██╗      ██████╗ ██████╗ ███╗   ███╗██████╗  █████╗ ███████╗ ██████╗ ██████╗ \033[0m
 \033[38;5;202m   ██╔════╝ ██╔══██╗██║     ██║     ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔════╝██╔═══██╗██╔══██╗\033[0m
 \033[38;5;208m   ██║      ███████║██║     ██║     ██║     ██║   ██║██╔████╔██║██████╔╝███████║██║     ██║   ██║██████╔╝\033[0m
@@ -48,11 +56,12 @@ banner() {
 \033[38;5;46m                   ██║  ██║██║     ██║     ██║██║        ██║   ██║ ╚████║\033[0m
 \033[38;5;46m                   ╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝        ╚═╝   ╚═╝  ╚═══╝\033[0m
 "
-    echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
-    echo -e "\033[37m    GLM5 Chad Edition v${VERSION} | Arch Linux BTRFS Installer\033[0m"
-    echo -e "\033[37m    \"I use Arch, btw\" - Now with 1337-tier repo selection\033[0m"
-    echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
-    echo ""
+        echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
+        echo -e "\033[37m    GLM5 Chad Edition v${VERSION} | Arch Linux BTRFS Installer\033[0m"
+        echo -e "\033[37m    \"I use Arch, btw\" - Now with 1337-tier repo selection\033[0m"
+        echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
+        echo ""
+    fi
 }
 
 check_dependencies() {
@@ -62,8 +71,7 @@ check_dependencies() {
     local errors=0
     local warnings=0
     
-    local required_tools=("bash" "python3" "sed" "awk" "grep" "tr" "cut")
-    local recommended_tools=("gum" "dialog" "curl" "wget" "git")
+    local required_tools=("bash" "python3" "sed" "awk" "grep" "tr" "cut" "gum")
     local install_tools=("parted" "mkfs.btrfs" "pacstrap" "arch-chroot")
     
     echo "=== Required Tools ==="
@@ -75,23 +83,6 @@ check_dependencies() {
             ((errors++))
         fi
     done
-    
-    echo ""
-    echo "=== TUI Backends (at least one recommended) ==="
-    local tui_found=false
-    for tool in "${recommended_tools[@]:0:2}"; do
-        if command -v "$tool" &>/dev/null; then
-            echo "✓ $tool: $(command -v "$tool")"
-            tui_found=true
-        else
-            echo "- $tool: not installed (optional)"
-        fi
-    done
-    
-    if ! $tui_found; then
-        echo "⚠ No TUI backend found - will use pure bash fallback"
-        ((warnings++))
-    fi
     
     echo ""
     echo "=== Network Tools ==="
@@ -174,11 +165,11 @@ run_tests() {
     local backend
     backend=$(_tui_detect_backend 2>/dev/null || echo "unknown")
     echo "Backend: $backend"
-    if [[ "$backend" =~ ^(gum|dialog|bash)$ ]]; then
+    if [[ "$backend" == "gum" ]]; then
         echo "✓ Valid TUI backend detected"
         passed=$((passed + 1))
     else
-        echo "✗ Invalid TUI backend"
+        echo "✗ TUI backend not available"
         failed=$((failed + 1))
     fi
     
@@ -325,10 +316,9 @@ Environment Variables:
     LOG_LEVEL=DEBUG    Set logging verbosity
     CONFIG_FILE=path   Specify config file
 
-TUI Backends (in order of preference):
-    1. gum    - Best experience, install with: pacman -S gum
-    2. dialog - Good fallback, usually pre-installed
-    3. bash   - Works everywhere, limited features
+Requirements:
+    gum - Required for interactive TUI (install with: pacman -S gum)
+    The installer will automatically install gum if missing.
 
 Profiles:
     desktop    - Modern desktop with Hyprland, CachyOS kernel
@@ -391,6 +381,19 @@ parse_args() {
 }
 
 init() {
+    if ! command -v gum &>/dev/null && [[ "$NON_INTERACTIVE" != "true" ]] && [[ -t 0 ]] && [[ -t 1 ]]; then
+        echo "gum is required for interactive TUI. Installing..."
+        if command -v pacman &>/dev/null; then
+            sudo pacman -S --noconfirm gum || {
+                echo "Failed to install gum. Please install manually: pacman -S gum"
+                exit 1
+            }
+        else
+            echo "pacman not found. Please install gum manually."
+            exit 1
+        fi
+    fi
+    
     load_all_libs || {
         echo "Failed to load required libraries"
         exit 1
@@ -407,11 +410,11 @@ main_menu() {
         banner
         
         local backend_name
-        case "$(_tui_detect_backend)" in
-            gum) backend_name="gum 🍬" ;;
-            dialog) backend_name="dialog 📺" ;;
-            *) backend_name="bash 💻" ;;
-        esac
+        if [[ "$(_tui_detect_backend)" == "gum" ]]; then
+            backend_name="gum 🍬"
+        else
+            backend_name="none (non-interactive)"
+        fi
         
         local options=(
             "🚀 Install Arch Linux"

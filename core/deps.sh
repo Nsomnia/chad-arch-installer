@@ -25,7 +25,6 @@ declare -A DEPS_REQUIRED=(
 
 declare -A DEPS_TUI=(
     [gum]="gum"
-    [dialog]="dialog"
 )
 
 declare -A DEPS_NETWORK=(
@@ -130,7 +129,7 @@ deps_check_all() {
     done
     
     if ! $tui_found; then
-        log_warn "⚠ No TUI backend found - will use pure bash fallback"
+        log_warn "⚠ gum not found - TUI will not work. Install with: pacman -S gum"
         ((warnings++))
     fi
     
@@ -277,10 +276,8 @@ deps_get_status() {
     
     if deps_check_binary "gum"; then
         status+="TUI: gum ✓ | "
-    elif deps_check_binary "dialog"; then
-        status+="TUI: dialog ✓ | "
     else
-        status+="TUI: bash (fallback) | "
+        status+="TUI: ✗ | "
     fi
     
     if deps_check_binary "curl" || deps_check_binary "wget"; then

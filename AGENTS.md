@@ -10,7 +10,7 @@ This is a modular, enterprise-grade Arch Linux installer designed for reliabilit
 glm5-chad-arch-installer/
 ├── installer.sh          # Main entry point
 ├── core/                 # Core infrastructure modules
-│   ├── tui.sh           # Terminal UI framework (gum/dialog/bash)
+│   ├── tui.sh           # Terminal UI framework (gum)
 │   ├── logging.sh       # Centralized logging system
 │   ├── config.sh        # Configuration management
 │   ├── mock.sh          # Mock/test mode infrastructure
@@ -121,7 +121,7 @@ INSTALL_MOUNT="/mnt"        # Installation mount point
 INSTALL_DEVICE              # Target device
 
 # TUI
-_TUI_BACKEND                # Current TUI backend (gum/dialog/bash)
+_TUI_BACKEND                # Current TUI backend (gum)
 _TUI_COLORS_ENABLED         # Color output enabled
 
 # Configuration
@@ -178,36 +178,42 @@ some_function() {
 
 ## TUI System
 
-### Backends
+### Backend
 
-The TUI system supports three backends in order of preference:
+The TUI system requires **gum** for interactive use. It will be automatically installed if missing.
 
-1. **gum** - Best experience, install with `pacman -S gum`
-2. **dialog** - Good fallback, usually pre-installed
-3. **bash** - Works everywhere, limited features
+- **gum** - Required for interactive TUI (install with `pacman -S gum`)
+- Non-interactive mode available with `-y` flag for scripted usage
 
 ### Available Functions
 
 ```bash
-# Menu selection (single)
+# Menu selection (single) - arrow keys to navigate, Enter to select
 choice=$(_tui_menu_select "Prompt" "Option 1" "Option 2" "Option 3")
 
-# Menu selection (multiple)
+# Menu selection (multiple) - Space to toggle, Enter to confirm
 mapfile -t selected < <(_tui_menu_multi "Prompt" "Opt1" "Opt2" "Opt3")
+
+# Filter/fuzzy search through options
+choice=$(_tui_filter "Search..." "Option 1" "Option 2" "Option 3")
 
 # Input
 value=$(_tui_input "Prompt" "default" "placeholder")
 
-# Password
+# Password (masked input)
 password=$(_tui_password "Prompt")
 
-# Confirmation
+# Confirmation (Yes/No) - arrow keys or y/n
 if _tui_confirm "Continue?"; then
     :
 fi
 
-# Progress
+# Progress bar
 _tui_progress $current $total "Message"
+
+# Spinner for long operations
+_tui_spinner $pid "Processing..."
+_tui_spin "Running command..." command args
 
 # Display
 _tui_header "Title"
@@ -217,26 +223,22 @@ _tui_success "Success message"
 _tui_warn "Warning message"
 _tui_error "Error message"
 
+# Styled box for important messages
+_tui_box "Title" "Content" "rounded" "141"
+
+# Multiline text input
+text=$(_tui_write "Enter description:" "default text")
+
+# File picker
+file=$(_tui_file "/path/to/browse")
+
 # Utilities
 _tui_clear
 _tui_wait "Press any key..."
 _tui_pager "$content"
+_tui_style "Styled text"
+_tui_table data_array "Col1" "Col2" "Col3"
 ```
-
-### Bash Fallback Multiselect Controls
-
-When using bash fallback for multiselect:
-
-| Key | Action |
-|-----|--------|
-| ↑/k | Move up |
-| ↓/j | Move down |
-| Space | Toggle selection |
-| a | Select all |
-| n | Select none |
-| / | Search |
-| Enter | Confirm |
-| q/Esc | Cancel |
 
 ## Mock Mode
 
@@ -656,10 +658,11 @@ mock_write_file "/etc/config" "$content"
 
 ### Common Issues
 
-1. **Gum not detected**: Install with `pacman -S gum`
+1. **Gum not installed**: The installer will auto-install gum; if that fails, run `pacman -S gum`
 2. **Colors not working**: Check if stdout is a TTY
 3. **Mock mode not working**: Set `MOCK_MODE=true` before calling functions
 4. **Config not loading**: Check YAML syntax, ensure yq or internal parser works
+5. **TUI hangs**: Ensure you're running in a terminal (not piped)
 
 ### Debug Mode
 

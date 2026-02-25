@@ -258,7 +258,7 @@
 
 - [x] Fix repo selection reporting only 1 repo instead of all selected
 - [x] Verify JSON cache at `$HOME/.cache/chad-installer-repos.json`
-- [x] Ensure gum/dialog TUI works correctly for multi-select
+- [x] Ensure gum TUI works correctly for multi-select
 - [x] Add repos_enable_interactive() with proper multi-repo selection
 - [x] Add test mode (`./installer.sh test`)
 - [x] Add check-deps command
