@@ -24,10 +24,6 @@ mock_init() {
         return 0
     fi
     
-    log_info "Mock mode ENABLED - no actual changes will be made"
-    log_info "Mock log: $MOCK_LOG"
-    log_info "Mock root: $MOCK_ROOT"
-    
     mkdir -p "$MOCK_ROOT"
     echo "=== Mock Session Started: $(date) ===" > "$MOCK_LOG"
     

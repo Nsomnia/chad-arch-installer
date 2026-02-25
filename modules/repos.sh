@@ -127,31 +127,39 @@ PYEOF
 }
 
 repos_update_from_wiki() {
-    log_info "Fetching unofficial repositories from ArchWiki..."
+    _tui_info "Fetching unofficial repositories from ArchWiki..."
     
     mkdir -p "$(dirname "$REPOS_CACHE")"
     
+    local fetch_rc=1
     if command -v curl &>/dev/null; then
-        curl -sL "$ARCHWIKI_URL" -o "$REPOS_CACHE" 2>/dev/null
+        curl -sL --max-time 30 "$ARCHWIKI_URL" -o "$REPOS_CACHE"
+        fetch_rc=$?
     elif command -v wget &>/dev/null; then
-        wget -q "$ARCHWIKI_URL" -O "$REPOS_CACHE" 2>/dev/null
+        wget -q --timeout=30 -O "$REPOS_CACHE" "$ARCHWIKI_URL"
+        fetch_rc=$?
     else
-        log_error "Neither curl nor wget available"
+        _tui_error "Neither curl nor wget available"
+        return 1
+    fi
+    
+    if [[ $fetch_rc -ne 0 ]]; then
+        _tui_error "Failed to fetch (returned $fetch_rc)"
         return 1
     fi
     
     if [[ ! -f "$REPOS_CACHE" ]] || [[ ! -s "$REPOS_CACHE" ]]; then
-        log_error "Failed to fetch repository list"
+        _tui_error "Failed to fetch repository list (empty file)"
         return 1
     fi
     
     local count
     count=$(_parse_archwiki_repos_python "$REPOS_CACHE" "$REPOS_JSON") || {
-        log_error "Failed to parse repository data"
+        _tui_error "Failed to parse repository data"
         return 1
     }
     
-    log_success "Loaded $count repositories to $REPOS_JSON"
+    _tui_success "Loaded $count repositories"
 }
 
 repos_ensure_cache() {
@@ -583,22 +591,20 @@ repos_auto_detect() {
 
 repos_menu() {
     while true; do
-        _tui_header "Repository Manager"
-        
         local status_info=""
         local enabled_count
         enabled_count=$(grep -c '^\[' /etc/pacman.conf 2>/dev/null || echo "0")
         status_info="($enabled_count repos in pacman.conf)"
         
         local options=(
-            "📋 List Available Repositories"
-            "➕ Select Repositories to Enable"
-            "➖ Disable a Repository"
-            "📊 Show Enabled Repositories"
-            "🔍 Search Repositories"
-            "🚀 Auto-detect Optimized Repo"
-            "🔄 Update from ArchWiki"
-            "⬅️  Back"
+            "List Available Repositories"
+            "Select Repositories to Enable"
+            "Disable a Repository"
+            "Show Enabled Repositories"
+            "Search Repositories"
+            "Auto-detect Optimized Repo"
+            "Update from ArchWiki"
+            "Back"
         )
         
         local choice
@@ -612,11 +618,7 @@ repos_menu() {
                 local selected
                 mapfile -t selected < <(repos_select)
                 if [[ ${#selected[@]} -gt 0 ]]; then
-                    _tui_header "Selected Repositories (${#selected[@]})"
-                    for s in "${selected[@]}"; do
-                        echo "  - $s"
-                    done
-                    echo ""
+                    _tui_box "Selected Repositories (${#selected[@]})" "$(printf '  - %s\n' "${selected[@]}")" "rounded" "141"
                     if _tui_confirm "Enable these ${#selected[@]} repositories?"; then
                         repos_enable_selected "${selected[@]}"
                     fi

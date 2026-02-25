@@ -438,63 +438,58 @@ options snd_hda_intel power_save=1
 }
 
 hardware_detect_all() {
-    _log_section "Full Hardware Detection"
+    local results=()
     
-    _tui_header "Hardware Detection Results"
+    results+=("=== CPU ===")
+    while IFS='|' read -r line; do
+        results+=("  $line")
+    done < <(detect_cpu_info | tr '|' '\n')
     
-    echo ""
-    echo "=== CPU ==="
-    detect_cpu_info | tr '|' '\n' | while read -r line; do
-        echo "  $line"
-    done
+    results+=("=== GPU ===")
+    local gpu_output
+    gpu_output=$(hardware_detect_gpu)
+    if [[ -n "$gpu_output" ]]; then
+        while IFS= read -r line; do
+            results+=("  $line")
+        done <<< "$gpu_output"
+    else
+        results+=("  None detected")
+    fi
     
-    echo ""
-    echo "=== GPU ==="
-    hardware_detect_gpu | while read -r line; do
-        if [[ -n "$line" ]]; then
-            echo "  $line"
-        fi
-    done || echo "  None detected"
-    
-    echo ""
-    echo "=== Touchscreen ==="
+    results+=("=== Touchscreen ===")
     if hardware_detect_touchscreen; then
-        echo "  Detected"
+        results+=("  Detected")
     else
-        echo "  Not detected"
+        results+=("  Not detected")
     fi
     
-    echo ""
-    echo "=== WiFi ==="
+    results+=("=== WiFi ===")
     if hardware_detect_wifi; then
-        echo "  Detected"
+        results+=("  Detected")
     else
-        echo "  Not detected"
+        results+=("  Not detected")
     fi
     
-    echo ""
-    echo "=== Bluetooth ==="
+    results+=("=== Bluetooth ===")
     if hardware_detect_bluetooth; then
-        echo "  Detected"
+        results+=("  Detected")
     else
-        echo "  Not detected"
+        results+=("  Not detected")
     fi
     
-    echo ""
-    echo "=== Audio ==="
+    results+=("=== Audio ===")
     if hardware_detect_audio; then
-        echo "  Detected"
+        results+=("  Detected")
     else
-        echo "  Not detected"
+        results+=("  Not detected")
     fi
     
-    echo ""
-    echo "=== Legacy Hardware ==="
-    if hardware_detect_legacy; then
-        : 
-    else
-        echo "  None detected"
+    results+=("=== Legacy Hardware ===")
+    if ! hardware_detect_legacy; then
+        results+=("  None detected")
     fi
+    
+    _tui_box "Hardware Detection Results" "$(printf '%s\n' "${results[@]}")" "rounded" "45"
 }
 
 hardware_install_drivers() {
@@ -564,8 +559,6 @@ hardware_install_drivers() {
 }
 
 hardware_interactive() {
-    _tui_header "Hardware Detection Menu"
-    
     local options=(
         "Detect All Hardware"
         "Detect GPU"

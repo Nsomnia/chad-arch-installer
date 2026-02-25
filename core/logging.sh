@@ -13,9 +13,10 @@ fi
 
 LOG_DIR="${LOG_DIR:-/var/log/chad-installer}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/install.log}"
-LOG_LEVEL="${LOG_LEVEL:-DEBUG}"
+LOG_LEVEL="${LOG_LEVEL:-INFO}"
 LOG_TO_FILE="${LOG_TO_FILE:-true}"
 LOG_TO_SYSLOG="${LOG_TO_SYSLOG:-false}"
+LOG_TO_CONSOLE="${LOG_TO_CONSOLE:-false}"
 
 declare -A LOG_LEVELS=(
     [DEBUG]=0
@@ -101,13 +102,15 @@ _log() {
         logger -t "chad-installer" "[$level] $msg"
     fi
     
-    case "$level" in
-        DEBUG) echo -e "\033[2m$log_line\033[0m" ;;
-        INFO)  echo -e "\033[34m$log_line\033[0m" ;;
-        WARN)  echo -e "\033[33m$log_line\033[0m" >&2 ;;
-        ERROR) echo -e "\033[31m$log_line\033[0m" >&2 ;;
-        FATAL) echo -e "\033[31;1m$log_line\033[0m" >&2 ;;
-    esac
+    if [[ "${LOG_TO_CONSOLE:-false}" == "true" ]]; then
+        case "$level" in
+            DEBUG) echo -e "\033[2m$log_line\033[0m" ;;
+            INFO)  echo -e "\033[34m$log_line\033[0m" ;;
+            WARN)  echo -e "\033[33m$log_line\033[0m" >&2 ;;
+            ERROR) echo -e "\033[31m$log_line\033[0m" >&2 ;;
+            FATAL) echo -e "\033[31;1m$log_line\033[0m" >&2 ;;
+        esac
+    fi
 }
 
 log_debug() { _log DEBUG "$@"; }

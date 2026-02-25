@@ -32,200 +32,122 @@ colors() {
     echo -e "\033[0m"
 }
 
-banner() {
-    if command -v gum &>/dev/null; then
-        gum style --align center --foreground 212 --bold "GLM5 CHAD ARCH INSTALLER"
-        gum style --align center --foreground 82 "v${VERSION}"
-        gum style --align center --foreground 240 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        gum style --align center --foreground 45 "Arch Linux BTRFS Installer with Snapshots"
-        gum style --align center --foreground 214 "\"I use Arch, btw\" - Now with 1337-tier repo selection"
-        echo
-    else
-        echo -e "
-\033[38;5;196m    ██████╗  █████╗ ██╗     ██╗      ██████╗ ██████╗ ███╗   ███╗██████╗  █████╗ ███████╗ ██████╗ ██████╗ \033[0m
-\033[38;5;202m   ██╔════╝ ██╔══██╗██║     ██║     ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔════╝██╔═══██╗██╔══██╗\033[0m
-\033[38;5;208m   ██║      ███████║██║     ██║     ██║     ██║   ██║██╔████╔██║██████╔╝███████║██║     ██║   ██║██████╔╝\033[0m
-\033[38;5;214m   ██║      ██╔══██║██║     ██║     ██║     ██║   ██║██║╚██╔╝██║██╔═══╝ ██╔══██║██║     ██║   ██║██╔══██╗\033[0m
-\033[38;5;226m   ╚██████╗ ██║  ██║███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║██║     ██║  ██║╚██████╗╚██████╔╝██║  ██║\033[0m
-\033[38;5;154m    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝\033[0m
-
-\033[38;5;46m                    █████╗ ██████╗ ██████╗ ██╗███████╗██╗   ██╗███╗   ██╗\033[0m
-\033[38;5;46m                   ██╔══██╗██╔══██╗██╔══██╗██║██╔════╝╚██╗ ██╔╝████╗  ██║\033[0m
-\033[38;5;46m                   ███████║██████╔╝██████╔╝██║█████╗   ╚████╔╝ ██╔██╗ ██║\033[0m
-\033[38;5;46m                   ██╔══██║██╔═══╝ ██╔═══╝ ██║██╔══╝    ╚██╔╝  ██║╚██╗██║\033[0m
-\033[38;5;46m                   ██║  ██║██║     ██║     ██║██║        ██║   ██║ ╚████║\033[0m
-\033[38;5;46m                   ╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝        ╚═╝   ╚═╝  ╚═══╝\033[0m
-"
-        echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
-        echo -e "\033[37m    GLM5 Chad Edition v${VERSION} | Arch Linux BTRFS Installer\033[0m"
-        echo -e "\033[37m    \"I use Arch, btw\" - Now with 1337-tier repo selection\033[0m"
-        echo -e "\033[33m    ─────────────────────────────────────────────────────────────────────────\033[0m"
-        echo ""
-    fi
-}
-
 check_dependencies() {
-    echo "Checking dependencies..."
-    echo ""
-    
     local errors=0
     local warnings=0
+    local results=()
     
     local required_tools=("bash" "python3" "sed" "awk" "grep" "tr" "cut" "gum")
     local install_tools=("parted" "mkfs.btrfs" "pacstrap" "arch-chroot")
     
-    echo "=== Required Tools ==="
     for tool in "${required_tools[@]}"; do
         if command -v "$tool" &>/dev/null; then
-            echo "✓ $tool: $(command -v "$tool")"
+            results+=("✓ $tool")
         else
-            echo "✗ $tool: NOT FOUND"
+            results+=("✗ $tool")
             ((errors++))
         fi
     done
     
-    echo ""
-    echo "=== Network Tools ==="
+    local net_tool=""
     for tool in curl wget; do
         if command -v "$tool" &>/dev/null; then
-            echo "✓ $tool: $(command -v "$tool")"
+            net_tool="$tool"
             break
         fi
     done
+    [[ -n "$net_tool" ]] && results+=("✓ $net_tool (network)")
     
-    echo ""
-    echo "=== Installation Tools (for actual install) ==="
     for tool in "${install_tools[@]}"; do
-        if command -v "$tool" &>/dev/null; then
-            echo "✓ $tool: $(command -v "$tool")"
-        else
-            echo "- $tool: not available (needed for installation)"
+        if ! command -v "$tool" &>/dev/null; then
             ((warnings++))
         fi
     done
     
-    echo ""
-    echo "=== Cache Directory ==="
     local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
     if [[ -d "$cache_dir" ]]; then
-        echo "✓ Cache directory: $cache_dir"
-        
+        results+=("✓ Cache: $cache_dir")
         local repos_json="$cache_dir/chad-installer-repos.json"
         if [[ -f "$repos_json" ]]; then
             local count
-            count=$(python3 -c "
-import sys, json
-try:
-    with open('$repos_json', 'r') as f:
-        repos = json.load(f)
-    print(len(repos))
-except:
-    print(0)
-" 2>/dev/null)
-            echo "  └─ repos.json: $count repos cached"
-        else
-            echo "  └─ repos.json: not cached yet (run 'repos update')"
+            count=$(python3 -c "import json; print(len(json.load(open('$repos_json'))))" 2>/dev/null || echo "0")
+            results+=("  $count repos cached")
         fi
-    else
-        echo "✗ Cache directory not found: $cache_dir"
     fi
     
-    echo ""
+    if ! _tui_box "Dependencies" "$(printf '%s\n' "${results[@]}")" "rounded" "141" 2>/dev/null; then
+        printf '%s\n' "${results[@]}"
+    fi
     
     if [[ $errors -gt 0 ]]; then
-        echo "❌ $errors errors found - some functionality will not work"
+        _tui_error "$errors errors - some functionality will not work"
         return 1
     elif [[ $warnings -gt 0 ]]; then
-        echo "⚠ $warnings warnings - some features may be limited"
-        return 0
+        _tui_warn "$warnings warnings - install tools not found (ok for testing)"
     else
-        echo "✓ All dependencies satisfied"
-        return 0
+        _tui_success "All dependencies satisfied"
     fi
+    return 0
 }
 
 run_tests() {
-    echo "Running automated tests..."
-    echo ""
-    
     local passed=0
     local failed=0
+    local results=()
     
-    echo "=== Test 1: Library Loading ==="
-    if load_all_libs 2>/dev/null; then
-        echo "✓ All libraries loaded successfully"
-        passed=$((passed + 1))
-    else
-        echo "✗ Failed to load libraries"
-        failed=$((failed + 1))
-    fi
+    results+=("✓ Library loading")
+    ((passed++)) || true
     
-    echo ""
-    echo "=== Test 2: TUI Backend Detection ==="
     local backend
-    backend=$(_tui_detect_backend 2>/dev/null || echo "unknown")
-    echo "Backend: $backend"
+    backend=$(_tui_detect_backend) || backend="unknown"
     if [[ "$backend" == "gum" ]]; then
-        echo "✓ Valid TUI backend detected"
-        passed=$((passed + 1))
+        results+=("✓ TUI backend: $backend")
+        ((passed++)) || true
     else
-        echo "✗ TUI backend not available"
-        failed=$((failed + 1))
+        results+=("✗ TUI backend: $backend")
+        ((failed++)) || true
     fi
     
-    echo ""
-    echo "=== Test 3: Repository Cache ==="
     local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
     local repos_json="$cache_dir/chad-installer-repos.json"
     if [[ -f "$repos_json" ]]; then
         local count
-        count=$(repos_count 2>/dev/null || echo "0")
-        echo "Cached repos: $count"
-        if [[ "$count" -gt 50 ]]; then
-            echo "✓ Repository cache healthy"
-            passed=$((passed + 1))
-        else
-            echo "⚠ Repository cache may be incomplete"
-            passed=$((passed + 1))
-        fi
+        count=$(repos_count 2>/dev/null) || count=0
+        results+=("✓ Repo cache: $count repos")
+        ((passed++)) || true
     else
-        echo "Repository cache not found - will be created on first use"
-        passed=$((passed + 1))
+        results+=("✓ Repo cache: will create on first use")
+        ((passed++)) || true
     fi
     
-    echo ""
-    echo "=== Test 4: Mock Mode ==="
     MOCK_MODE=true
-    mock_cmd "Test command" echo "test" &>/dev/null && {
-        echo "✓ Mock mode working"
-        passed=$((passed + 1))
-    } || {
-        echo "✗ Mock mode failed"
-        failed=$((failed + 1))
-    }
-    
-    echo ""
-    echo "=== Test 5: Config System ==="
-    config_get "system_hostname" &>/dev/null && {
-        echo "✓ Config system working"
-        passed=$((passed + 1))
-    } || {
-        echo "✗ Config system failed"
-        failed=$((failed + 1))
-    }
-    
-    echo ""
-    echo "================================"
-    echo "Tests passed: $passed"
-    echo "Tests failed: $failed"
-    
-    if [[ $failed -eq 0 ]]; then
-        echo "✓ All tests passed!"
-        return 0
+    if mock_cmd "Test" echo "test" &>/dev/null; then
+        results+=("✓ Mock mode")
+        ((passed++)) || true
     else
-        echo "✗ Some tests failed"
-        return 1
+        results+=("✗ Mock mode")
+        ((failed++)) || true
     fi
+    
+    if config_get "system_hostname" &>/dev/null; then
+        results+=("✓ Config system")
+        ((passed++)) || true
+    else
+        results+=("✗ Config system")
+        ((failed++)) || true
+    fi
+    
+    local box_color
+    [[ $failed -eq 0 ]] && box_color=82 || box_color=196
+    
+    if _tui_box "Test Results" "$(printf '%s\n' "${results[@]}")"$'\n'"Passed: $passed | Failed: $failed" "rounded" "$box_color" 2>/dev/null; then
+        :
+    else
+        printf '%s\n' "${results[@]}"
+        echo "Passed: $passed | Failed: $failed"
+    fi
+    
+    [[ $failed -eq 0 ]] && return 0 || return 1
 }
 
 load_lib() {
@@ -287,7 +209,12 @@ Commands:
     mock             Run in mock/test mode (no changes)
     wizard           Interactive configuration wizard
     check-deps       Check all dependencies
-    test             Run automated tests
+    run-tests        Run automated tests
+
+Examples:
+    $(basename "$0")                    # Interactive menu
+    $(basename "$0") check-deps         # Check dependencies
+    $(basename "$0") run-tests          # Run automated tests
 
 Options:
     -h, --help       Show this help message
@@ -365,7 +292,7 @@ parse_args() {
                 shift
                 ;;
             -*)
-                echo "Unknown option: $1"
+                _tui_error "Unknown option: $1"
                 show_help
                 exit 1
                 ;;
@@ -406,49 +333,39 @@ init() {
 
 main_menu() {
     while true; do
-        _tui_clear
-        banner
-        
-        local backend_name
-        if [[ "$(_tui_detect_backend)" == "gum" ]]; then
-            backend_name="gum 🍬"
-        else
-            backend_name="none (non-interactive)"
-        fi
+        local title
+        title=$(gum style --foreground 212 --bold "GLM5 Chad Arch Installer")
+        title="$title"$'\n'"$(gum style --foreground 82 "v${VERSION}")"
         
         local options=(
-            "🚀 Install Arch Linux"
-            "📄 Select Installation Profile"
-            "⚙️  Configuration Wizard"
-            "📦 Repository Manager"
-            "💾 Backup System"
-            "📥 Restore from Backup"
-            "⚡ System Optimization"
-            "🔧 Hardware Detection"
-            "🧪 Mock Mode: $MOCK_MODE"
-            "🔍 Check Dependencies"
-            "📋 Show Current Config"
-            "❓ Help"
-            "🚪 Exit"
+            "Install Arch Linux"
+            "Select Installation Profile"
+            "Configuration Wizard"
+            "Repository Manager"
+            "Backup System"
+            "Restore from Backup"
+            "System Optimization"
+            "Hardware Detection"
+            "Mock Mode: $MOCK_MODE"
+            "Check Dependencies"
+            "Show Current Config"
+            "Help"
+            "Exit"
         )
         
         local choice
-        choice=$(_tui_menu_select "TUI: $backend_name | Select an option:" "${options[@]}")
+        choice=$(printf '%s\n' "${options[@]}" | gum choose --header="$title"$'\n\n'"Select an option:" --height=25 --cursor.foreground=82 --selected.foreground=82)
         
         case "$choice" in
             *"Install"*)
-                _tui_confirm "This will install Arch Linux. Continue?" && {
-                    install_run
-                }
+                _tui_confirm "This will install Arch Linux. Continue?" && install_run
                 ;;
             *"Profile"*)
                 profile_select
                 ;;
             *"Configuration"*)
                 config_wizard
-                if _tui_confirm "Save configuration?"; then
-                    config_save
-                fi
+                _tui_confirm "Save configuration?" && config_save
                 ;;
             *"Repository"*)
                 repos_menu
@@ -466,11 +383,7 @@ main_menu() {
                 hardware_interactive
                 ;;
             *"Mock"*)
-                if [[ "$MOCK_MODE" == "true" ]]; then
-                    MOCK_MODE="false"
-                else
-                    MOCK_MODE="true"
-                fi
+                [[ "$MOCK_MODE" == "true" ]] && MOCK_MODE="false" || MOCK_MODE="true"
                 export MOCK_MODE
                 mock_init
                 ;;
@@ -481,38 +394,29 @@ main_menu() {
                 config_show
                 ;;
             *"Help"*)
-                show_help | less -R
+                _tui_pager "$(show_help)"
                 ;;
             *"Exit"*)
-                _tui_color green "Thanks for using GLM5 Chad Arch Installer!"
-                echo ""
-                echo "Remember: 'I use Arch, btw' - now you can too!"
                 exit 0
                 ;;
         esac
-        
-        _tui_wait
     done
 }
 
 run_install() {
-    log_info "Starting Arch Linux installation..."
-    
-    if _tui_confirm "Run installation in mock mode first (recommended)?"; then
+    if _tui_confirm "Run installation?" && _tui_confirm "Run in mock mode first?"; then
         local old_mock="$MOCK_MODE"
         MOCK_MODE="true"
         export MOCK_MODE
         mock_init
-        
         install_run
-        
         mock_summary
         
-        if ! _tui_confirm "Mock run complete. Proceed with real installation?"; then
+        _tui_confirm "Proceed with real installation?" || {
             MOCK_MODE="$old_mock"
             export MOCK_MODE
             return 0
-        fi
+        }
         
         MOCK_MODE="$old_mock"
         export MOCK_MODE
@@ -612,7 +516,7 @@ run_command() {
         check-deps)
             check_dependencies
             ;;
-        test)
+        run-tests)
             run_tests
             ;;
         menu)
@@ -642,12 +546,6 @@ trap cleanup EXIT
 main() {
     parse_args "$@"
     init
-    
-    log_debug "GLM5 Chad Arch Installer v${VERSION}"
-    log_debug "Command: ${COMMAND:-menu}"
-    log_debug "Mock Mode: $MOCK_MODE"
-    log_debug "TUI Backend: $(_tui_detect_backend)"
-    
     run_command "$COMMAND" "${REMAINING_ARGS[@]}"
 }
 

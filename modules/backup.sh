@@ -407,8 +407,6 @@ backup_select_paths() {
 }
 
 backup_interactive() {
-    _tui_header "Backup Menu"
-    
     local options=(
         "Full Backup"
         "Package Lists Only"
@@ -447,8 +445,6 @@ backup_interactive() {
 }
 
 restore_interactive() {
-    _tui_header "Restore Menu"
-    
     local options=(
         "Packages"
         "Pacman Database"

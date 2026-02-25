@@ -314,8 +314,6 @@ optimize_all() {
 }
 
 optimize_interactive() {
-    _tui_header "Optimization Menu"
-    
     local options=(
         "Full Optimization"
         "makepkg.conf Only"
@@ -349,27 +347,22 @@ optimize_interactive() {
             "ZRAM Setup") optimize_zram ;;
             "I/O Schedulers") optimize_io_scheduler ;;
             "Show CPU Info")
-                local cpu_info
+                local cpu_info results=()
                 cpu_info=$(detect_cpu_info)
-                _tui_header "CPU Information"
                 for part in $cpu_info; do
                     local key="${part%%=*}"
                     local value="${part#*=}"
-                    printf "  %-10s: %s\n" "$key" "$value"
+                    results+=("$key: $value")
                 done
-                echo ""
-                echo "Features: $(detect_cpu_features)"
+                results+=("Features: $(detect_cpu_features)")
                 if declare -f makepkg_get_cpu_march &>/dev/null; then
-                    echo ""
-                    echo "Makepkg Settings:"
-                    echo "  March:  $(makepkg_get_cpu_march)"
-                    echo "  Jobs:   $(makepkg_get_parallel_jobs)"
-                    echo "  Linker: $(makepkg_detect_linker)"
+                    results+=("March: $(makepkg_get_cpu_march)")
+                    results+=("Jobs: $(makepkg_get_parallel_jobs)")
+                    results+=("Linker: $(makepkg_detect_linker)")
                 fi
+                _tui_box "CPU Information" "$(printf '%s\n' "${results[@]}")" "rounded" "45"
                 ;;
             "Back") return 0 ;;
         esac
-        
-        _tui_wait
     done
 }

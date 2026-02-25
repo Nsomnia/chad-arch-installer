@@ -42,7 +42,7 @@ _tui_install_gum() {
 }
 
 _tui_init() {
-    if command -v gum &>/dev/null && gum --version &>/dev/null; then
+    if command -v gum &>/dev/null; then
         _TUI_BACKEND="gum"
     elif [[ "$NON_INTERACTIVE" != "true" ]]; then
         echo "gum is required for interactive TUI but not found."
